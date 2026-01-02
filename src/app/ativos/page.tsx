@@ -2,109 +2,125 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Ativos } from "@/types/ativos";
+import { Ativo } from "@/types/ativo";
 import Loading from "@/components/UI/Loading";
 import AddAtivoModal from "@/components/UI/AddAtivoModal";
+import AddAtivoModal2 from "@/components/UI/AddAtivoModal2";
+import { supabase } from "@/lib/supabase";
 
 export default function AtivosPage() {
-  const [ativos, setAtivos] = useState<Ativos[]>([]);
+  const [ativos, setAtivos] = useState<Ativo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState<boolean>(true);
 
-  async function getAtivos() {
+  async function refreshData() {
     try {
       setLoading(true);
-      const res = await fetch("/api/ativos");
-      const data = await res.json();
-      setAtivos(data);
+      const { data, error } = await supabase
+        .from('ativo')
+        .select(`
+          *,
+          categoria_ativo ( nome_categoria ),
+          localizacao ( nome_localizacao ),
+          condicao_ativo ( nome_condicao )
+        `)
+        .order('data_criacao', { ascending: false });
+
+      if (error) throw error;
+      setAtivos(data || []);
     } catch (error) {
-      console.error("Erro ao buscar ativos:", error);
+      console.error("Erro ao buscar dados:", error);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    getAtivos();
+    refreshData();
   }, []);
 
   const ativosFiltrados = ativos.filter((ativo) =>
-    ativo.Item.toLowerCase().includes(searchTerm.toLowerCase())
+    ativo.nome_ativo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  if (loading) {
-    return <Loading />;
-  }
+  if (loading) return <Loading />;
 
   return (
-    <div className="h-full w-full py-20">
+    <div className="h-full w-full py-20 bg-[#131416]">
       <div className="container mx-auto px-4 max-w-5xl">
-        <h1 className="text-2xl font-extrabold text-center text-white mb-8 tracking-tight">
-          Ativos
+        <h1 className="text-3xl font-extrabold text-center text-white mb-12 tracking-tight">
+          Painel de Ativos
         </h1>
 
-        {/* Container da Barra de Busca e Botão Novo Ativo */}
-        <div className="mb-12 max-w-2xl mx-auto flex flex-col sm:flex-row items-center gap-4">
+        {/* Barra de Ações */}
+        <div className="mb-12 max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-4">
           <div className="relative flex-grow w-full">
             <input
               type="text"
-              placeholder="Buscar por título..."
+              placeholder="Buscar por nome do ativo..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full bg-[#1b1c1f] border border-[#2c2d30] text-gray-200 px-5 py-3 rounded-xl 
                          focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500
-                         transition-all duration-200 placeholder:text-gray-500"
+                         transition-all duration-200 placeholder:text-gray-500 shadow-lg"
             />
-            <span className="absolute right-4 top-3.5 text-gray-500">
-              🔍
-            </span>
+            <span className="absolute right-4 top-3.5 text-gray-500">🔍</span>
           </div>
 
-          {/* Botão posicionado ao lado da busca */}
-          <div className="shrink-0">
-            <AddAtivoModal onSuccess={getAtivos} />
+          <div className="flex shrink-0 gap-3 w-full md:w-auto">
+            <AddAtivoModal onSuccess={refreshData} />
+            <AddAtivoModal2 onSuccess={refreshData} />
           </div>
         </div>
 
-        {/* Feedback da Busca */}
-        <div className="max-w-2xl mx-auto -mt-8 mb-8">
-           {searchTerm && (
-            <p className="text-sm text-gray-500 ml-2">
-              Resultados para: <span className="text-indigo-400">{searchTerm}</span>
-            </p>
-          )}
-        </div>
-
-        {/* Grid de Cards */}
+        {/* Lista de Cards */}
         <div className="grid gap-6 md:grid-cols-2">
           {ativosFiltrados.length > 0 ? (
             ativosFiltrados.map((ativo) => (
               <Link
-                key={ativo.id}
-                href={`/ativos/${ativo.id}`}
-                className="group block p-6 rounded-2xl bg-[#1b1c1f] border border-[#2c2d30]
-                        shadow-[0_0_25px_-10px_rgba(0,0,0,0.5)]
-                        transition-all duration-300 
-                        hover:-translate-y-1 hover:shadow-[0_0_35px_-5px_rgba(80,70,255,0.4)]
-                        hover:border-indigo-500"
+                key={ativo.id_ativo}
+                href={`/ativos/${ativo.id_ativo}`}
+                className="group block p-6 rounded-3xl bg-[#1b1c1f] border border-[#2c2d30]
+                           shadow-xl transition-all duration-300 
+                           hover:-translate-y-1 hover:shadow-[0_0_30px_-5px_rgba(79,70,229,0.3)]
+                           hover:border-indigo-500/50"
               >
-                <h2 className="text-2xl font-semibold text-gray-200 group-hover:text-indigo-400 transition-colors">
-                  {ativo.Item}
-                </h2>
+                <div className="flex justify-between items-start mb-4">
+                  <h2 className="text-xl font-bold text-gray-100 group-hover:text-indigo-400 transition-colors">
+                    {ativo.nome_ativo}
+                  </h2>
+                  <span className="text-[10px] text-gray-500 font-mono bg-[#25262b] px-2 py-1 rounded-md">
+                    #{ativo.id_ativo.slice(0,6)}
+                  </span>
+                </div>
 
-                <p className="text-sm text-gray-400 mt-2">
-                  {new Date(ativo.data).toLocaleDateString("pt-BR")}
-                </p>
+                <div className="flex flex-wrap gap-2">
+                  {ativo.categoria_ativo && (
+                    <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                      {ativo.categoria_ativo.nome_categoria}
+                    </span>
+                  )}
+                  {ativo.localizacao && (
+                    <span className="text-[10px] font-bold uppercase px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      {ativo.localizacao.nome_localizacao}
+                    </span>
+                  )}
+                </div>
 
-                <div className="mt-4 text-indigo-400 font-medium opacity-0 
-                              group-hover:opacity-100 transition-opacity">
-                  Ler mais →
+                <div className="mt-6 pt-4 border-t border-[#2c2d30] flex justify-between items-center text-xs">
+                   <div className="flex items-center gap-2 text-gray-500 font-medium">
+                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
+                    {new Date(ativo.data_criacao).toLocaleDateString("pt-BR")}
+                   </div>
+                   <span className="text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                    Gerenciar →
+                  </span>
                 </div>
               </Link>
             ))
           ) : (
-            <div className="text-center col-span-2 py-10">
-              <p className="text-gray-500">Nenhum ativo encontrado com esse nome.</p>
+            <div className="text-center col-span-full py-20 bg-[#1b1c1f] rounded-3xl border border-dashed border-[#2c2d30]">
+              <p className="text-gray-500 font-medium italic">Nenhum ativo encontrado.</p>
             </div>
           )}
         </div>

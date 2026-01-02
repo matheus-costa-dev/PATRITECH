@@ -12,6 +12,7 @@
     "@graphcms/rich-text-react-renderer": "^0.6.2",
     "@headlessui/react": "^2.2.9",
     "@neondatabase/serverless": "^1.0.2",
+    "@supabase/supabase-js": "^2.89.0",
     "graphql-request": "^7.3.4",
     "next": "^16.1.1",
     "react": "^19.2.3",
