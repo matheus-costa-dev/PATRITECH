@@ -49,36 +49,35 @@ export default function AddAtivoModal({ onSuccess }: AddAtivoModalProps) {
     setLoading(true);
     try {
       // 1. Lógica para Categoria (Busca ou Cria)
-      let { data: catData } = await supabase.from("categoria_ativo").select("id_categoria").eq("nome_categoria", categoria).single();
+      let { data: catData } = await supabase.from("categoria_ativo").select("id_categoria").eq("nome_categoria", categoria).maybeSingle();
       if (!catData) {
         const { data: newCat } = await supabase.from("categoria_ativo").insert({ nome_categoria: categoria }).select().single();
         catData = newCat;
       }
 
-      // 2. Lógica para Localização (Escrito, como você pediu)
-      let { data: locData } = await supabase.from("localizacao").select("id_localizacao").eq("nome_localizacao", local).single();
+      // 2. Lógica para Localização (Busca ou Cria)
+      let { data: locData } = await supabase.from("localizacao").select("id_localizacao").eq("nome_localizacao", local).maybeSingle();
       if (!locData) {
         const { data: newLoc } = await supabase.from("localizacao").insert({ nome_localizacao: local }).select().single();
         locData = newLoc;
       }
 
-      // 3. Salvar o Ativo
-      const { data: novoAtivo, error } = await supabase.from("ativo").insert([{
-        nome_ativo: nome,
-        id_categoria: catData?.id_categoria,
-        id_localizacao: locData?.id_localizacao,
-        id_condicao: condicaoSelecionada?.id_condicao,
-        data_criacao: dataAtivo // Usando a data de aquisição enviada
-      }]).select().single();
+      // 3. CHAMADA DA RPC (Substitui os inserts manuais de Ativo e Defeito)
+      // Isso garante que o texto do defeito e a origem da localização nasçam juntos
+      const { data: idGerado, error: rpcError } = await supabase.rpc('cadastrar_ativo_com_defeito', {
+        p_nome_ativo: nome,
+        p_id_categoria: catData?.id_categoria,
+        p_id_condicao: condicaoSelecionada?.id_condicao,
+        p_id_localizacao: locData?.id_localizacao,
+        p_descricao_defeito: defeito // Aqui o seu texto (ex: "teste 3") entra no banco
+      });
 
-      if (error) throw error;
+      if (rpcError) throw rpcError;
 
-      // 4. Salvar Defeito se necessário
-      if (precisaDeDefeito && novoAtivo) {
-        await supabase.from("ativo_defeituoso").insert({
-          id_ativo: novoAtivo.id_ativo,
-          descricao_defeito: defeito
-        });
+      // Opcional: Se você quiser atualizar a data_criacao para a data de aquisição 
+      // (Já que a RPC usa o NOW() por padrão no banco)
+      if (dataAtivo) {
+        await supabase.from("ativo").update({ data_criacao: dataAtivo }).eq("id_ativo", idGerado);
       }
 
       toast.success("Ativo adicionado com sucesso!");
@@ -86,6 +85,7 @@ export default function AddAtivoModal({ onSuccess }: AddAtivoModalProps) {
       setIsOpen(false);
       onSuccess();
     } catch (error: any) {
+      console.error(error);
       toast.error("Erro ao adicionar ativo.");
     } finally {
       setLoading(false);

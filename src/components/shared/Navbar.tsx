@@ -18,6 +18,10 @@ const links: linksType[] = [
   {
     title: "Ativos",
     href: "/ativos"
+  },
+  {
+    title: "Lotes",
+    href: "/lote"
   }
 ]
 
