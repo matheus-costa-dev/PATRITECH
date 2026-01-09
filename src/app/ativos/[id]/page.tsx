@@ -5,6 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
+import {QRCodeCanvas} from 'qrcode.react';
+
 
 export default function AtivoPage() {
   const params = useParams();
@@ -209,6 +211,25 @@ export default function AtivoPage() {
                     Excluir
                   </button>
                 )}
+              </div>
+              <div className="p-4 bg-white rounded-lg shadow-md inline-block">
+        <QRCodeCanvas
+          value={document.location.href}
+          size={256}
+          bgColor={"#ffffff"}
+          fgColor={"#000000"}
+          level={"H"} // Nível de correção de erro (L, M, Q, H)
+          includeMargin={false}
+          imageSettings={{
+            src: "https://nextjs.org/favicon.ico", // Opcional: Logo no centro
+            x: undefined,
+            y: undefined,
+            height: 40,
+            width: 40,
+            excavate: true, // Garante que o QR code não fique atrás do logo
+          }}
+        />
+      
               </div>
 
               {!isEditing && (
