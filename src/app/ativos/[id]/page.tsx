@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { QRCodeCanvas  } from 'qrcode.react';
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
 
@@ -254,6 +255,16 @@ export default function AtivoPage() {
               {isSaving ? "A gravar..." : "Confirmar Alterações"}
             </button>
           )}
+        </div>
+        <div className="flex justify-center">
+          <QRCodeCanvas
+            value={window.location.href}
+            size={200}
+            bgColor="#ffffff"
+            fgColor="#000000"
+            level="H"
+            includeMargin
+          />
         </div>
       </div>
 
