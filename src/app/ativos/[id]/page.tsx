@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { QRCodeCanvas  } from 'qrcode.react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
 
@@ -12,11 +12,13 @@ export default function AtivoPage() {
   const params = useParams();
   const router = useRouter();
 
+  const canvasRef = useRef<HTMLDivElement>(null);
+
   const [ativo, setAtivo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Estados para expansão de seções
   const [mostrarMaisInfo, setMostrarMaisInfo] = useState(false);
   const [verTodasAvarias, setVerTodasAvarias] = useState(false);
@@ -43,6 +45,26 @@ export default function AtivoPage() {
     { id: 3, nome: "Ruim", cor: "bg-yellow-600" },
     { id: 4, nome: "Inutilizável", cor: "bg-red-600" },
   ];
+
+  function downloadQRCode() {
+    // 2. Localizamos o elemento <canvas> dentro da div
+    const canvas = canvasRef.current?.querySelector("canvas");
+
+    if (canvas) {
+      // 3. Transformamos o canvas em uma imagem PNG
+      const pngUrl = canvas
+        .toDataURL("image/png")
+        .replace("image/png", "image/octet-stream");
+
+      // 4. Criamos um link temporário para o download
+      const downloadLink = document.createElement("a");
+      downloadLink.href = pngUrl;
+      downloadLink.download = "qrcode-ativo.png";
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+    }
+  };
 
   async function carregarDados() {
     try {
@@ -72,7 +94,7 @@ export default function AtivoPage() {
           id_condicao: data.id_condicao || 0,
         });
       }
-    } catch (err) { toast.error("Erro ao carregar"); } 
+    } catch (err) { toast.error("Erro ao carregar"); }
     finally { setLoading(false); }
   }
 
@@ -90,21 +112,21 @@ export default function AtivoPage() {
     if (defeitoTexto !== undefined && !defeitoTexto.trim()) {
       return toast.error("Por favor, descreva o defeito.");
     }
-    
+
     setIsSaving(true);
     try {
       const agora = new Date().toISOString();
-      
+
       let { data: cat } = await supabase.from("categoria_ativo").select("id_categoria").eq("nome_categoria", editForm.categoria).maybeSingle();
-      if (!cat) { 
-        const { data: nCat } = await supabase.from("categoria_ativo").insert({ nome_categoria: editForm.categoria }).select().single(); 
-        cat = nCat; 
+      if (!cat) {
+        const { data: nCat } = await supabase.from("categoria_ativo").insert({ nome_categoria: editForm.categoria }).select().single();
+        cat = nCat;
       }
-      
+
       let { data: loc } = await supabase.from("localizacao").select("id_localizacao").eq("nome_localizacao", editForm.local).maybeSingle();
-      if (!loc) { 
-        const { data: nLoc } = await supabase.from("localizacao").insert({ nome_localizacao: editForm.local }).select().single(); 
-        loc = nLoc; 
+      if (!loc) {
+        const { data: nLoc } = await supabase.from("localizacao").insert({ nome_localizacao: editForm.local }).select().single();
+        loc = nLoc;
       }
 
       if (loc?.id_localizacao && loc.id_localizacao !== ativo.id_localizacao) {
@@ -130,7 +152,7 @@ export default function AtivoPage() {
         id_categoria: cat?.id_categoria,
         id_localizacao: loc?.id_localizacao,
         id_condicao: editForm.id_condicao,
-        data_ultima_verificacao: agora 
+        data_ultima_verificacao: agora
       }).eq("id_ativo", params.id);
 
       if (error) throw error;
@@ -140,11 +162,11 @@ export default function AtivoPage() {
       setShowDefeitoModal(false);
       setInputNovoDefeito("");
       carregarDados();
-      
-    } catch (e) { 
-      toast.error("Erro ao salvar."); 
-    } finally { 
-      setIsSaving(false); 
+
+    } catch (e) {
+      toast.error("Erro ao salvar.");
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -169,7 +191,7 @@ export default function AtivoPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0f1012] p-8 text-white flex flex-col items-center font-sans overflow-x-hidden">
-      
+
       {/* CARD PRINCIPAL */}
       <div className="w-full max-w-3xl bg-[#1b1c1f] rounded-[40px] border border-white/10 shadow-2xl overflow-hidden mb-6">
         <div className="p-12 border-b border-white/5">
@@ -177,10 +199,10 @@ export default function AtivoPage() {
             <div className="flex-1">
               <span className="text-indigo-500 font-black text-xs uppercase tracking-widest">ID: #{ativo?.id_ativo}</span>
               {isEditing ? (
-                <input 
+                <input
                   className="text-5xl font-black bg-black/40 border-b-2 border-indigo-500 outline-none w-full mt-4 py-2 px-4 rounded-xl shadow-inner"
                   value={editForm.nome_ativo}
-                  onChange={(e) => setEditForm({...editForm, nome_ativo: e.target.value})}
+                  onChange={(e) => setEditForm({ ...editForm, nome_ativo: e.target.value })}
                 />
               ) : (
                 <h1 className="text-5xl font-black tracking-tighter mt-4">{ativo?.nome_ativo}</h1>
@@ -193,19 +215,19 @@ export default function AtivoPage() {
             {/* BOTÕES DE AÇÃO */}
             <div className="flex flex-col gap-3 ml-6 min-w-[280px]">
               <div className="flex gap-3 w-full">
-                <button 
-                  onClick={() => setIsEditing(!isEditing)} 
+                <button
+                  onClick={() => setIsEditing(!isEditing)}
                   className="flex-1 bg-white text-black py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all"
                 >
                   {isEditing ? "Cancelar" : "Editar"}
                 </button>
 
                 {!isEditing && (
-                  <button 
+                  <button
                     onClick={() => {
-                      if(confirm("Excluir ativo?")) 
-                        supabase.from("ativo").delete().eq("id_ativo", params.id).then(()=>router.push("/ativos"))
-                    }} 
+                      if (confirm("Excluir ativo?"))
+                        supabase.from("ativo").delete().eq("id_ativo", params.id).then(() => router.push("/ativos"))
+                    }}
                     className="flex-1 bg-red-500/10 text-red-500 border border-red-500/20 py-4 rounded-2xl text-[10px] font-black uppercase hover:bg-red-600 hover:text-white transition-all"
                   >
                     Excluir
@@ -216,11 +238,11 @@ export default function AtivoPage() {
               </div>
 
               {!isEditing && (
-                <button 
+                <button
                   onClick={() => {
-                    setInputNovoDefeito(""); 
-                    setShowDefeitoModal(true); 
-                  }} 
+                    setInputNovoDefeito("");
+                    setShowDefeitoModal(true);
+                  }}
                   className="w-full bg-orange-500/10 text-orange-500 border border-orange-500/20 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-orange-600 hover:text-white transition-all shadow-lg"
                 >
                   Relatar Defeito no Ativo
@@ -228,30 +250,30 @@ export default function AtivoPage() {
               )}
             </div>
           </div>
-          
+
         </div>
 
         <div className="p-12 space-y-12">
           <div className="grid grid-cols-2 gap-10">
             <div className="space-y-4">
               <label className="text-[11px] text-gray-400 font-black uppercase tracking-widest ml-2">Categoria</label>
-              <input disabled={!isEditing} className="w-full bg-black/40 p-7 rounded-[30px] border border-white/10 outline-none text-gray-100 font-bold" value={editForm.categoria} onChange={(e)=>setEditForm({...editForm, categoria:e.target.value})} />
+              <input disabled={!isEditing} className="w-full bg-black/40 p-7 rounded-[30px] border border-white/10 outline-none text-gray-100 font-bold" value={editForm.categoria} onChange={(e) => setEditForm({ ...editForm, categoria: e.target.value })} />
             </div>
             <div className="space-y-4">
               <label className="text-[11px] text-gray-400 font-black uppercase tracking-widest ml-2">Localização</label>
-              <input disabled={!isEditing} className="w-full bg-black/40 p-7 rounded-[30px] border border-white/10 outline-none text-gray-100 font-bold" value={editForm.local} onChange={(e)=>setEditForm({...editForm, local:e.target.value})} />
+              <input disabled={!isEditing} className="w-full bg-black/40 p-7 rounded-[30px] border border-white/10 outline-none text-gray-100 font-bold" value={editForm.local} onChange={(e) => setEditForm({ ...editForm, local: e.target.value })} />
             </div>
           </div>
 
           <div className="space-y-6">
-             <label className="text-[11px] text-gray-400 font-black uppercase ml-2 tracking-widest">Condição Atual</label>
-             <div className="grid grid-cols-4 gap-4">
-                {condicoes.map(c => (
-                  <button key={c.id} disabled={!isEditing} onClick={() => setEditForm({...editForm, id_condicao: c.id})} className={`py-7 rounded-[25px] text-[10px] font-black uppercase transition-all border ${editForm.id_condicao === c.id ? `${c.cor} border-transparent text-white shadow-2xl scale-105` : 'bg-black/40 border-white/5 text-gray-600 hover:border-white/20'}`}>
-                    {c.nome}
-                  </button>
-                ))}
-             </div>
+            <label className="text-[11px] text-gray-400 font-black uppercase ml-2 tracking-widest">Condição Atual</label>
+            <div className="grid grid-cols-4 gap-4">
+              {condicoes.map(c => (
+                <button key={c.id} disabled={!isEditing} onClick={() => setEditForm({ ...editForm, id_condicao: c.id })} className={`py-7 rounded-[25px] text-[10px] font-black uppercase transition-all border ${editForm.id_condicao === c.id ? `${c.cor} border-transparent text-white shadow-2xl scale-105` : 'bg-black/40 border-white/5 text-gray-600 hover:border-white/20'}`}>
+                  {c.nome}
+                </button>
+              ))}
+            </div>
           </div>
 
           {isEditing && (
@@ -260,20 +282,36 @@ export default function AtivoPage() {
             </button>
           )}
         </div>
-        <div className="flex justify-center">
-          <QRCodeCanvas
-            value={window.location.href}
-            size={200}
-            bgColor="#ffffff"
-            fgColor="#000000"
-            level="H"
-            includeMargin
-          />
+        {/* Container pai com flex para centralizar o bloco de 1/2 */}
+        <div className="flex justify-center w-full">
+
+          {/* O bloco que ocupa 1/2 do componente e centraliza o conteúdo */}
+          <div
+            ref={canvasRef}
+            className="w-1/2 flex flex-col items-center justify-center gap-4 pb-4"
+          >
+            <QRCodeCanvas
+              value={typeof window !== "undefined" ? window.location.href : ""}
+              size={200}
+              bgColor="#ffffff"
+              fgColor="#000000"
+              level="H"
+              includeMargin
+              style={{ width: "100%", height: "auto", maxWidth: "200px" }} // Garante responsividade dentro do 1/2
+            />
+
+            <button
+              onClick={downloadQRCode}
+              className="w-full max-w-[200px] px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg shadow-md transition-all active:scale-95 text-center"
+            >
+              Baixar QR Code
+            </button>
+          </div>
         </div>
       </div>
 
       {/* GATILHO PARA MAIS INFORMAÇÕES */}
-      <button 
+      <button
         onClick={() => setMostrarMaisInfo(!mostrarMaisInfo)}
         className="group flex items-center gap-3 text-gray-500 hover:text-indigo-400 transition-all font-black uppercase text-[10px] tracking-[0.3em] mb-12 py-4"
       >
@@ -284,7 +322,7 @@ export default function AtivoPage() {
       {/* SEÇÃO EXPANSÍVEL (HISTÓRICOS) */}
       {mostrarMaisInfo && (
         <div className="w-full max-w-3xl space-y-12 animate-in fade-in slide-in-from-top-4 duration-500">
-          
+
           {/* HISTÓRICO TÉCNICO */}
           <section className="bg-[#1b1c1f] p-10 rounded-[50px] border border-white/10 shadow-2xl">
             <h3 className="text-xs font-black text-gray-500 uppercase tracking-[0.4em] mb-10 text-center">Histórico Técnico</h3>
@@ -296,7 +334,7 @@ export default function AtivoPage() {
                       {a.solucionado ? "✓ Resolvido" : "⚠ Pendente"}
                     </span>
                     {!a.solucionado && (
-                      <button onClick={() => {setAvariaParaResolver(a); setShowSolucaoModal(true)}} className="bg-white text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase">Resolver</button>
+                      <button onClick={() => { setAvariaParaResolver(a); setShowSolucaoModal(true) }} className="bg-white text-black px-6 py-2 rounded-xl text-[10px] font-black uppercase">Resolver</button>
                     )}
                   </div>
                   <p className="text-xl text-gray-200 font-bold mb-2">{a.descricao_defeito}</p>
@@ -309,7 +347,7 @@ export default function AtivoPage() {
                   )}
                 </div>
               ))}
-              
+
               {ativo?.ativo_defeituoso?.length > 3 && (
                 <button onClick={() => setVerTodasAvarias(!verTodasAvarias)} className="w-full text-xs text-indigo-400 font-black uppercase py-4 tracking-widest">
                   {verTodasAvarias ? "Recolher Histórico ↑" : `Ver todas as avarias (${ativo.ativo_defeituoso.length}) ↓`}
