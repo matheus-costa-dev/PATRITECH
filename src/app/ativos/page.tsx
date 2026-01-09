@@ -7,11 +7,13 @@ import Loading from "@/components/UI/Loading";
 import AddAtivoModal from "@/components/UI/AddAtivoModal";
 import AddAtivoModal2 from "@/components/UI/AddAtivoModal2";
 import { supabase } from "@/lib/supabase";
+import QrScanner from "@/components/UI/QrScanner";
 
 export default function AtivosPage() {
   const [ativos, setAtivos] = useState<Ativo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState<boolean>(true);
+  const [open, setOpen] = useState(false);
 
   async function refreshData() {
     try {
@@ -48,6 +50,17 @@ export default function AtivosPage() {
   return (
     <div className="h-full w-full py-20 bg-[#131416]">
       <div className="container mx-auto px-4 max-w-5xl">
+        <div className="h-full w-full flex justify-center pb-10">
+          <button
+            onClick={() => setOpen(true)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2"
+          >
+            Ler QR Code
+          </button>
+
+          {open && <QrScanner onClose={() => setOpen(false)} />}
+        </div>
+
         <h1 className="text-3xl font-extrabold text-center text-white mb-12 tracking-tight">
           Painel de Ativos
         </h1>
@@ -90,7 +103,7 @@ export default function AtivosPage() {
                     {ativo.nome_ativo}
                   </h2>
                   <span className="text-[10px] text-gray-500 font-mono bg-[#25262b] px-2 py-1 rounded-md">
-                    #{ativo.id_ativo.slice(0,6)}
+                    #{ativo.id_ativo.slice(0, 6)}
                   </span>
                 </div>
 
@@ -108,11 +121,11 @@ export default function AtivosPage() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-[#2c2d30] flex justify-between items-center text-xs">
-                   <div className="flex items-center gap-2 text-gray-500 font-medium">
+                  <div className="flex items-center gap-2 text-gray-500 font-medium">
                     <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
                     {new Date(ativo.data_criacao).toLocaleDateString("pt-BR")}
-                   </div>
-                   <span className="text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                  </div>
+                  <span className="text-indigo-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
                     Gerenciar →
                   </span>
                 </div>
