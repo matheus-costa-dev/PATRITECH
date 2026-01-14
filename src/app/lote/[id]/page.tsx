@@ -18,7 +18,6 @@ export default function DetalheLotePage() {
   async function carregarDadosLote() {
     try {
       setLoading(true);
-      // 1. Busca dados do lote
       const { data: loteData, error: loteError } = await supabase
         .from("lote")
         .select("*")
@@ -28,7 +27,6 @@ export default function DetalheLotePage() {
       if (loteError) throw loteError;
       setLote(loteData);
 
-      // 2. Busca ativos vinculados a este lote
       const { data: ativosData, error: ativosError } = await supabase
         .from("ativo")
         .select(`
@@ -50,13 +48,11 @@ export default function DetalheLotePage() {
     }
   }
 
-  // FUNÇÃO PARA APAGAR LOTE E ATIVOS (Cascata manual)
   async function apagarLoteCompleto() {
     const confirmar = confirm("ATENÇÃO: Isso apagará o lote e TODOS os ativos vinculados a ele permanentemente. Deseja continuar?");
     if (!confirmar) return;
 
     try {
-      // 1. Apaga os ativos primeiro (devido às constraints de FK)
       const { error: errorAtivos } = await supabase
         .from("ativo")
         .delete()
@@ -64,7 +60,6 @@ export default function DetalheLotePage() {
       
       if (errorAtivos) throw errorAtivos;
 
-      // 2. Apaga o lote
       const { error: errorLote } = await supabase
         .from("lote")
         .delete()
@@ -79,13 +74,11 @@ export default function DetalheLotePage() {
     }
   }
 
-  // FUNÇÃO PARA RELATAR PROBLEMA EM MASSA
   async function relatarProblemaEmMassa() {
     const descricao = prompt("Descreva o problema que afeta todos os ativos deste lote:");
     if (!descricao) return;
 
     try {
-      // Cria um registro de defeito para cada ativo do lote
       const registrosDefeito = ativos.map(ativo => ({
         id_ativo: ativo.id_ativo,
         descricao_defeito: `[PROBLEMA EM LOTE] ${descricao}`,
@@ -110,73 +103,100 @@ export default function DetalheLotePage() {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen w-full bg-[#0f1012] p-4 md:p-12 text-white">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen w-full bg-[#f3f4f6] pb-20 font-sans text-[#333]">
+      <div className="max-w-5xl mx-auto px-4 pt-12">
         
-        {/* VOLTAR */}
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-gray-500 hover:text-white transition-colors mb-8 font-black uppercase text-[10px] tracking-widest">
-          <FaArrowLeft /> Voltar para Lotes
+        {/* BOTÃO VOLTAR REESTILIZADO */}
+        <button 
+          onClick={() => router.back()} 
+          className="flex items-center gap-2 text-gray-400 hover:text-[#00BFFF] transition-colors mb-8 font-bold uppercase text-[10px] tracking-widest group"
+        >
+          <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" /> Voltar para Lotes
         </button>
 
-        {/* CABEÇALHO DE AÇÕES */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
-          <div>
-            <span className="text-indigo-500 font-black text-xs uppercase tracking-[0.3em]">Detalhes da Carga</span>
-            <h1 className="text-5xl font-black tracking-tighter mt-2">{lote?.fornecedor_lote || `Lote #${id}`}</h1>
-            <p className="text-gray-500 mt-2 font-medium">Comprado em {new Date(lote?.data_compra).toLocaleDateString('pt-BR')}</p>
+        {/* CABEÇALHO PRINCIPAL */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-8 mb-12">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="bg-[#8b1d22] text-white px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter">
+                Carga Identificada
+              </span>
+            </div>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#333]">
+              {lote?.fornecedor_lote || `Lote #${id}`}
+            </h1>
+            <div className="flex items-center gap-2 mt-4 text-gray-500 font-medium">
+              <div className="w-2 h-2 rounded-full bg-[#00BFFF]"></div>
+              <span>Comprado em {new Date(lote?.data_compra).toLocaleDateString('pt-BR')}</span>
+            </div>
           </div>
 
-          <div className="flex gap-4 w-full md:w-auto">
+          {/* BOTÕES DE AÇÃO (ESTILO PÍLULA) */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <button 
               onClick={relatarProblemaEmMassa}
-              className="flex-1 md:flex-none bg-amber-500/10 text-amber-500 border border-amber-500/20 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-amber-500 hover:text-black transition-all flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none bg-[#FFA500] hover:bg-[#E69500] text-white px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest shadow-md active:scale-95 transition-all flex items-center justify-center gap-2"
             >
               <FaExclamationTriangle /> Relatar Problema em Massa
             </button>
             <button 
               onClick={apagarLoteCompleto}
-              className="flex-1 md:flex-none bg-red-500/10 text-red-500 border border-red-500/20 px-6 py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all flex items-center justify-center gap-2"
+              className="flex-1 sm:flex-none bg-white border-2 border-red-100 text-red-500 px-8 py-4 rounded-full text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all shadow-sm flex items-center justify-center gap-2"
             >
               <FaTrash /> Apagar Tudo
             </button>
           </div>
         </div>
 
-        {/* LISTAGEM DE ATIVOS */}
-        <div className="grid grid-cols-1 gap-4">
-          <h3 className="text-xs font-black uppercase tracking-[0.3em] text-gray-600 mb-2">Ativos Vinculados ({ativos.length})</h3>
-          {ativos.length > 0 ? (
-            ativos.map((ativo) => (
-              <div 
-                key={ativo.id_ativo}
-                className="bg-[#1b1c1f] border border-white/5 p-6 rounded-[30px] flex flex-col md:flex-row justify-between items-center gap-4 hover:border-indigo-500/30 transition-all"
-              >
-                <div className="flex items-center gap-6 w-full">
-                  <div className="bg-indigo-500/10 p-4 rounded-2xl text-indigo-500 shrink-0">
-                    <FaBoxOpen size={20} />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-black">{ativo.nome_ativo}</h4>
-                    <div className="flex flex-wrap gap-3 mt-1">
-                      <span className="text-[9px] font-bold uppercase text-gray-500">Local: {ativo.localizacao?.nome_localizacao}</span>
-                      <span className="text-[9px] font-bold uppercase text-indigo-400">Condição: {ativo.condicao_ativo?.nome_condicao}</span>
+        {/* LISTA DE ATIVOS VINCULADOS */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-4 border-b border-gray-200 pb-4">
+            <h3 className="text-xs font-black uppercase tracking-widest text-gray-400">
+              Itens no Lote ({ativos.length})
+            </h3>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4">
+            {ativos.length > 0 ? (
+              ativos.map((ativo) => (
+                <div 
+                  key={ativo.id_ativo}
+                  className="bg-white border border-gray-100 p-5 md:p-8 rounded-[2rem] flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm hover:shadow-md transition-all group"
+                >
+                  <div className="flex items-center gap-6 w-full">
+                    <div className="bg-gray-50 p-5 rounded-2xl text-[#00BFFF] shrink-0 border border-gray-100 group-hover:bg-[#00BFFF]/5 transition-colors">
+                      <FaBoxOpen size={24} />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold text-[#333] tracking-tight">{ativo.nome_ativo}</h4>
+                      <div className="flex flex-wrap gap-4 mt-2">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase text-gray-300">Localização</span>
+                          <span className="text-[10px] font-bold text-gray-600">{ativo.localizacao?.nome_localizacao}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[9px] font-black uppercase text-gray-300">Condição</span>
+                          <span className="text-[10px] font-bold text-[#00BFFF]">{ativo.condicao_ativo?.nome_condicao}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <Link 
-                  href={`/ativos/${ativo.id_ativo}`}
-                  className="w-full md:w-auto bg-white/5 hover:bg-white/10 text-white px-6 py-3 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all"
-                >
-                  Abrir Ativo <FaExternalLinkAlt size={10} />
-                </Link>
+                  <Link 
+                    href={`/ativos/${ativo.id_ativo}`}
+                    className="w-full md:w-auto bg-[#00BFFF] hover:bg-[#0096C7] text-white px-8 py-3 rounded-full text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all shadow-md"
+                  >
+                    Visualizar <FaExternalLinkAlt size={10} />
+                  </Link>
+                </div>
+              ))
+            ) : (
+              <div className="py-24 text-center bg-white rounded-[3rem] border-2 border-dashed border-gray-200">
+                <FaBoxOpen size={48} className="mx-auto text-gray-200 mb-4" />
+                <p className="text-gray-400 font-bold uppercase text-[10px] tracking-[0.3em]">Este lote está vazio no momento</p>
               </div>
-            ))
-          ) : (
-            <div className="py-20 text-center bg-[#1b1c1f] rounded-[40px] border border-dashed border-white/5">
-              <p className="text-gray-600 font-bold uppercase text-xs tracking-widest">Este lote não possui ativos cadastrados.</p>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

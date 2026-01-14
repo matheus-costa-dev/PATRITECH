@@ -10,10 +10,10 @@ function Footer() {
     const currentYear = new Date().getFullYear();
 
     return (
-        <footer className="bg-gray-900 mt-auto">
+        <footer className="bg-[#00BFFF] mt-auto">
             <div className="container flex mx-auto py-4 px-4 sm:px-6 lg:px-8">
                 <div className='w-full'>
-                    <p className="text-center text-sm text-gray-400">
+                    <p className="text-center text-sm text-white">
                         &copy; {currentYear} | Desenvolvido para fins de transparência e controle.
                     </p>
                 </div>

@@ -25,7 +25,6 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
 
   const [condicoes, setCondicoes] = useState<Condicao[]>([]);
 
-  // Lógica Reativa: calculada a cada renderização baseada no statusAtivo selecionado
   const condicaoSelecionada = condicoes.find(c => c.nome_condicao === statusAtivo);
   const precisaDeDefeito = condicaoSelecionada?.gera_avaria || false;
 
@@ -50,7 +49,6 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
 
     setLoading(true);
     try {
-      // 1. Categoria e Localização (Busca ou Cria)
       let catId: number;
       let locId: number;
 
@@ -72,7 +70,6 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
         locId = locData.id_localizacao;
       }
 
-      // 2. Criar o Lote
       const { data: loteCriado, error: loteError } = await supabase
         .from("lote")
         .insert([{ 
@@ -87,7 +84,6 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
 
       const idLoteGerado = loteCriado.id_lote;
 
-      // 3. Criar os Ativos vinculados
       const ativosParaInserir = Array.from({ length: quantidade }).map((_, index) => ({
         nome_ativo: `${nomeBase} ${index + 1}/${quantidade}`,
         id_categoria: catId,
@@ -104,7 +100,6 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
 
       if (ativosError) throw ativosError;
 
-      // 4. Registrar Defeitos se necessário
       if (precisaDeDefeito && ativosCriados) {
         const defeitosParaInserir = ativosCriados.map(ativo => ({
           id_ativo: ativo.id_ativo,
@@ -132,76 +127,80 @@ export default function AddAtivoModal2({ onSuccess }: AddAtivoModalProps) {
 
   return (
     <>
-      <button onClick={() => setIsOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg flex items-center gap-2">
-        <span>+</span> Novo lote de ativos
+      <button 
+        onClick={() => setIsOpen(true)} 
+        className="bg-[#7AC143] hover:bg-[#68a637] text-white px-8 py-2.5 rounded-full font-black uppercase text-[10px] tracking-widest transition-all shadow-lg flex items-center gap-2 active:scale-95"
+      >
+        <span className="text-lg">+</span> Novo Lote
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#1b1c1f] border border-[#2c2d30] w-full max-w-lg rounded-3xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-[#2c2d30] bg-emerald-600/5 flex justify-between items-center">
-              <h2 className="text-xl font-bold text-white">Cadastrar Lote</h2>
-              <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-white">✕</button>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-lg rounded-[2.5rem] overflow-hidden shadow-2xl animate-in zoom-in-95 duration-200">
+            
+            <div className="p-8 border-b border-gray-200 flex justify-between items-center bg-gray-50/80">
+              <div>
+                <h2 className="text-xl font-black text-[#7AC143] uppercase tracking-tighter">Entrada de Lote</h2>
+                <p className="text-[9px] font-bold text-gray-700 uppercase tracking-widest mt-1">Gestão de Grande Volume</p>
+              </div>
+              <button onClick={() => setIsOpen(false)} className="bg-white p-2 rounded-full shadow-md text-gray-600 hover:text-red-600 transition-colors border border-gray-200">✕</button>
             </div>
 
-            <form onSubmit={handleSubmit} className="p-8 space-y-4 max-h-[85vh] overflow-y-auto">
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-2">
-                  <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Nome dos Itens</label>
-                  <input type="text" value={nomeBase} onChange={(e) => setNomeBase(e.target.value)} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none focus:border-emerald-500" placeholder="Ex: Monitor LG" />
+            <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto custom-scrollbar">
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Nome Base dos Itens</label>
+                  <input type="text" value={nomeBase} onChange={(e) => setNomeBase(e.target.value)} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all placeholder:text-gray-400 font-bold" placeholder="Ex: Monitor LG" />
                 </div>
-                <div>
-                  <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Qtd</label>
-                  <input type="number" min="1" value={quantidade} onChange={(e) => setQuantidade(Number(e.target.value))} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none focus:border-emerald-500" />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Fornecedor</label>
-                <input type="text" value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none focus:border-emerald-500" placeholder="Ex: Distribuidora X" />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Data Compra</label>
-                  <input type="date" value={dataCompra} onChange={(e) => setDataCompra(e.target.value)} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none" />
-                </div>
-                <div>
-                  <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Categoria</label>
-                  <input type="text" value={categoria} onChange={(e) => setCategoria(e.target.value)} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none" placeholder="Informática" />
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Qtd</label>
+                  <input type="number" min="1" value={quantidade} onChange={(e) => setQuantidade(Number(e.target.value))} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all font-bold" />
                 </div>
               </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Destino (Localização)</label>
-                <input type="text" value={local} onChange={(e) => setLocal(e.target.value)} className="w-full bg-[#25262b] border border-[#2c2d30] rounded-xl p-3 mt-1 text-white outline-none" placeholder="Ex: Sala de Reunião" />
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Fornecedor / Origem</label>
+                <input type="text" value={fornecedor} onChange={(e) => setFornecedor(e.target.value)} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all placeholder:text-gray-400 font-bold" placeholder="Ex: Dell Brasil Ltda" />
               </div>
 
-              <div>
-                <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block mb-2">Estado dos Ativos</label>
-                <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Data da Compra</label>
+                  <input type="date" value={dataCompra} onChange={(e) => setDataCompra(e.target.value)} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all font-bold" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Categoria</label>
+                  <input type="text" value={categoria} onChange={(e) => setCategoria(e.target.value)} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all placeholder:text-gray-400 font-bold" placeholder="Ex: Mobiliário" />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1">Localização de Destino</label>
+                <input type="text" value={local} onChange={(e) => setLocal(e.target.value)} className="w-full bg-white border border-gray-400 rounded-2xl p-4 text-gray-800 outline-none focus:border-[#7AC143] focus:ring-1 focus:ring-[#7AC143] transition-all placeholder:text-gray-400 font-bold" placeholder="Ex: Almoxarifado Central" />
+              </div>
+
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-[#7AC143] uppercase tracking-widest ml-1 block">Estado Geral do Lote</label>
+                <div className="grid grid-cols-2 gap-3">
                   {["Excelente", "Bom", "Ruim", "Inutilizável"].map((op) => (
-                    <button
-                      key={op}
-                      type="button"
-                      onClick={() => setStatusAtivo(op)}
-                      className={`p-3 rounded-xl border text-sm font-medium transition-all ${statusAtivo === op ? "bg-emerald-600 border-emerald-500 text-white" : "bg-[#25262b] border-[#2c2d30] text-gray-400"}`}
-                    >
-                      {op}
-                    </button>
+                    <label key={op} className={`flex items-center gap-3 p-4 rounded-2xl border-2 cursor-pointer transition-all ${statusAtivo === op ? "bg-[#7AC143] border-[#7AC143] text-white shadow-md" : "bg-white border-gray-300 text-gray-700 hover:border-[#7AC143]"}`}>
+                      <input type="radio" name="statusAtivo" value={op} checked={statusAtivo === op} onChange={(e) => setStatusAtivo(e.target.value)} className="hidden" />
+                      <span className={`text-xs font-black uppercase tracking-tighter ${statusAtivo === op ? "text-white" : "text-gray-700"}`}>{op}</span>
+                    </label>
                   ))}
                 </div>
               </div>
 
               {precisaDeDefeito && (
-                <div className="animate-in fade-in slide-in-from-top-2">
-                  <label className="text-[10px] font-bold text-red-400 uppercase tracking-widest">Avaria Identificada</label>
-                  <textarea value={defeito} onChange={(e) => setDefeito(e.target.value)} className="w-full bg-[#25262b] border border-red-900/50 rounded-xl p-3 mt-1 text-white outline-none" rows={2} placeholder="Descreva o problema comum em todos os itens..." />
+                <div className="space-y-1.5 animate-in fade-in slide-in-from-top-4 duration-300">
+                  <label className="text-[10px] font-black text-red-700 uppercase tracking-widest ml-1">Defeito Comum Identificado</label>
+                  <textarea value={defeito} onChange={(e) => setDefeito(e.target.value)} className="w-full bg-red-50 border border-red-200 rounded-2xl p-4 text-gray-800 outline-none focus:border-red-500 transition-all placeholder:text-red-300 font-bold h-24" placeholder="Descreva a avaria presente nos itens..." />
                 </div>
               )}
 
-              <button type="submit" disabled={loading} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-4 rounded-2xl transition-all shadow-lg active:scale-95 disabled:opacity-50 mt-4">
-                {loading ? "Processando..." : `Finalizar Lote com ${quantidade} itens`}
+              <button type="submit" disabled={loading} className="w-full bg-[#7AC143] hover:bg-[#68a637] text-white font-black uppercase text-xs tracking-[0.2em] py-5 rounded-full shadow-lg shadow-green-100 transition-all active:scale-95 disabled:opacity-50 mt-4">
+                {loading ? "Processando Lote..." : `Finalizar Lote (${quantidade} Itens)`}
               </button>
             </form>
           </div>

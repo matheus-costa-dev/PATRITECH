@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
-import { FaBox, FaChevronRight, FaTruck, FaListUl } from "react-icons/fa";
+import { FaBox, FaChevronRight, FaTruck, FaListUl, FaPlus } from "react-icons/fa";
 import AddAtivoModal2 from "@/components/UI/AddAtivoModal2";
 
 function LotesPage() {
@@ -15,7 +15,6 @@ function LotesPage() {
   async function carregarLotes() {
     try {
       setLoading(true);
-      // Alterado: Agora buscamos o nome_ativo dentro da relação
       const { data, error } = await supabase
         .from("lote")
         .select(`
@@ -43,82 +42,95 @@ function LotesPage() {
   if (loading) return <Loading />;
 
   return (
-    <div className="min-h-screen w-full bg-[#0f1012] p-8 text-white flex flex-col items-center">
-      <div className="w-full max-w-5xl flex justify-between items-end mb-12">
-        <div>
-          <span className="text-indigo-500 font-black text-xs uppercase tracking-[0.3em]">Gestão de Carga</span>
-          <h1 className="text-5xl font-black tracking-tighter mt-2">Lotes</h1>
-        </div>
-        <div className="shrink-0">
-          <AddAtivoModal2 onSuccess={carregarLotes} />
+    <div className="min-h-screen w-full bg-[#f3f4f6] pb-20 font-sans text-[#333]">
+      
+      {/* TÍTULO E HEADER RESPONSIVO */}
+      <div className="w-full bg-white border-b border-gray-200 mb-12 shadow-sm">
+        <div className="container mx-auto px-4 max-w-5xl py-12 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left">
+            <span className="text-[#00BFFF] font-black text-xs uppercase tracking-[0.3em]">Gestão de Carga</span>
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-[#333] mt-2 uppercase">Lotes</h1>
+            <div className="w-16 h-1 bg-[#8b1d22] mt-3 mx-auto md:mx-0"></div>
+          </div>
+          <div className="shrink-0">
+             {/* O Modal permanece com sua lógica original */}
+            <AddAtivoModal2 onSuccess={carregarLotes} />
+          </div>
         </div>
       </div>
 
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="container mx-auto px-4 max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8">
         {lotes.length > 0 ? (
           lotes.map((lote) => (
             <Link 
               key={lote.id_lote} 
               href={`/lote/${lote.id_lote}`}
-              className="group block bg-[#1b1c1f] p-8 rounded-[40px] border border-white/5 hover:border-indigo-500/50 transition-all shadow-2xl min-h-[300px] flex flex-col"
+              className="group block bg-white p-8 rounded-[2.5rem] border border-gray-200 hover:border-[#00BFFF] transition-all shadow-lg hover:shadow-2xl flex flex-col min-h-[320px] relative overflow-hidden"
             >
+              {/* Ícone e ID */}
               <div className="flex justify-between items-start mb-6">
-                <div className="bg-indigo-500/10 p-4 rounded-2xl text-indigo-500 group-hover:bg-indigo-500 group-hover:text-white transition-all">
+                <div className="bg-blue-50 p-4 rounded-2xl text-[#00BFFF] group-hover:bg-[#00BFFF] group-hover:text-white transition-all shadow-sm">
                   <FaBox size={24} />
                 </div>
-                <span className="text-[10px] font-mono text-gray-600 uppercase">ID: #{lote.id_lote}</span>
+                <span className="text-[10px] font-mono font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100 uppercase">
+                  ID: #{String(lote.id_lote).slice(0, 8)}
+                </span>
               </div>
 
-              <div className="flex items-center gap-2 text-gray-400 mb-1">
-                <FaTruck size={12} className="text-indigo-500" />
+              {/* Informações do Lote */}
+              <div className="flex items-center gap-2 text-[#00BFFF] mb-2">
+                <FaTruck size={12} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Fornecedor</span>
               </div>
-              <h2 className="text-2xl font-black group-hover:text-indigo-400 transition-colors uppercase">
+              <h2 className="text-2xl font-extrabold text-[#333] group-hover:text-[#00BFFF] transition-colors uppercase leading-tight">
                 {lote.fornecedor_lote || "Não informado"}
               </h2>
 
-              {/* LISTA DE ATIVOS NO LOTE */}
-              <div className="mt-4 flex-grow">
-                <div className="flex items-center gap-2 mb-2 text-gray-500">
+              {/* LISTA DE ATIVOS NO LOTE (Mantendo a lógica slice 0, 3) */}
+              <div className="mt-6 flex-grow">
+                <div className="flex items-center gap-2 mb-3 text-gray-400">
                   <FaListUl size={10} />
-                  <span className="text-[10px] font-black uppercase tracking-widest">Itens neste lote:</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest">Itens principais:</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {lote.ativo && lote.ativo.length > 0 ? (
                     lote.ativo.slice(0, 3).map((at: any, index: number) => (
-                      <span key={index} className="text-[10px] bg-white/5 px-2 py-1 rounded-md text-gray-400 border border-white/5">
+                      <span key={index} className="text-[9px] bg-gray-50 px-3 py-1.5 rounded-full text-gray-500 border border-gray-100 font-bold uppercase">
                         {at.nome_ativo}
                       </span>
                     ))
                   ) : (
-                    <span className="text-[10px] italic text-gray-600">Nenhum ativo vinculado</span>
+                    <span className="text-[10px] italic text-gray-400">Nenhum ativo vinculado</span>
                   )}
                   {lote.ativo?.length > 3 && (
-                    <span className="text-[10px] text-indigo-500 font-bold">+{lote.ativo.length - 3} itens</span>
+                    <span className="text-[9px] bg-[#00BFFF]/10 px-3 py-1.5 rounded-full text-[#00BFFF] font-black uppercase">
+                      +{lote.ativo.length - 3} itens
+                    </span>
                   )}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center mt-6 pt-6 border-t border-white/5">
-                <div className="flex gap-8">
+              {/* RODAPÉ DO CARD */}
+              <div className="flex justify-between items-end mt-8 pt-6 border-t border-gray-50">
+                <div className="flex gap-6">
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Capacidade</span>
-                    <span className="text-xl font-black text-white">{lote.quantidade_ativos}</span>
+                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Capacidade</span>
+                    <span className="text-xl font-extrabold text-gray-800">{lote.quantidade_ativos}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Total Real</span>
-                    <span className="text-xl font-black text-indigo-500">{lote.ativo?.length || 0}</span>
+                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-widest">Total Real</span>
+                    <span className="text-xl font-extrabold text-[#00BFFF]">{lote.ativo?.length || 0}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600 group-hover:text-white transition-all font-black text-[10px] uppercase">
-                   Ver Mais <FaChevronRight size={10} />
+                <div className="flex items-center gap-2 text-gray-300 group-hover:text-[#00BFFF] transition-all font-black text-[10px] uppercase tracking-tighter">
+                   Detalhes <FaChevronRight size={10} />
                 </div>
               </div>
             </Link>
           ))
         ) : (
-          <div className="col-span-full py-20 text-center bg-[#1b1c1f] rounded-[40px] border border-dashed border-white/10 text-gray-500 font-black uppercase tracking-widest text-sm">
-            Nenhum lote encontrado
+          <div className="col-span-full py-20 text-center bg-white rounded-[2.5rem] border-2 border-dashed border-gray-200 text-gray-400 font-black uppercase tracking-widest text-sm shadow-sm">
+            Nenhum lote registrado no sistema
           </div>
         )}
       </div>
