@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useAuth } from "@/context/AuthContext"; // 1. Importe o hook
+import { supabase } from "@/lib/supabase";
+import { toast } from "react-toastify";
 
 const Hero = () => {
   const { login } = useAuth(); // 2. Pegue a função login do contexto
@@ -29,9 +31,28 @@ const Hero = () => {
     }
   };
 
+  const handleResetPassword = async () => {
+    // Pegue o email do seu estado de login (ex: const [email, setEmail] = useState(""))
+    if (!email) {
+      toast.error("Por favor, digite seu e-mail primeiro.");
+      return;
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Esta URL é para onde o usuário será enviado ao clicar no e-mail
+      redirectTo: `${window.location.origin}/redefinir-senha`,
+    });
+
+    if (error) {
+      toast.error("Erro ao enviar e-mail: " + error.message);
+    } else {
+      toast.success("E-mail de recuperação enviado! Verifique sua caixa de entrada.");
+    }
+  };
+
   return (
     <section className="relative min-h-screen w-full flex flex-col items-center justify-center px-4 font-sans">
-      
+
       {/* IMAGEM DE FUNDO */}
       <div className="absolute inset-0 z-0">
         <Image
@@ -45,7 +66,7 @@ const Hero = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-md flex flex-col items-center">
-        
+
         {/* IDENTIDADE VISUAL SUPERIOR */}
         <div className="flex flex-col items-center mb-8">
           <h1 className="text-4xl font-black text-[#333] tracking-tighter uppercase">
@@ -57,7 +78,7 @@ const Hero = () => {
         <div className="relative w-full max-w-md">
           {/* CARD DE LOGIN */}
           <div className="bg-white rounded-[2.5rem] p-10 md:p-12 shadow-2xl border border-gray-100">
-            
+
             <div className="text-center mb-10">
               <h2 className="text-2xl font-extrabold text-[#333] tracking-tight uppercase">
                 Bem vindo de volta!
@@ -98,7 +119,10 @@ const Hero = () => {
                   placeholder="••••••••"
                   className="w-full bg-gray-50 border border-gray-200 text-gray-700 px-5 py-4 rounded-2xl focus:outline-none focus:border-[#00BFFF] focus:ring-1 focus:ring-[#00BFFF] transition-all placeholder:text-gray-300 font-medium"
                 />
-                <button type="button" className="text-[10px] font-bold text-[#00BFFF] hover:underline uppercase">
+                <button
+                  onClick={handleResetPassword}
+                  type="button"
+                  className="text-[10px] font-bold text-[#00BFFF] hover:underline uppercase">
                   Esqueceu a senha? clique aqui!
                 </button>
               </div>
@@ -130,12 +154,12 @@ const Hero = () => {
               </p>
             </div>
           </div>
-          
+
           {/* Detalhe decorativo */}
           <div className="flex justify-center gap-2 mt-8 opacity-40">
-             <div className="w-8 h-1 bg-[#8cc63f] rounded-full"></div>
-             <div className="w-8 h-1 bg-[#00BFFF] rounded-full"></div>
-             <div className="w-8 h-1 bg-[#FFA500] rounded-full"></div>
+            <div className="w-8 h-1 bg-[#8cc63f] rounded-full"></div>
+            <div className="w-8 h-1 bg-[#00BFFF] rounded-full"></div>
+            <div className="w-8 h-1 bg-[#FFA500] rounded-full"></div>
           </div>
         </div>
       </div>

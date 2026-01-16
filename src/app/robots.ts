@@ -2,7 +2,7 @@
 import { MetadataRoute } from 'next'
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://www.consultacpnu.com.br';
+  const baseUrl = 'https://patritech.vercel.app/';
 
   return {
     rules: {

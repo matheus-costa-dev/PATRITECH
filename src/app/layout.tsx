@@ -24,39 +24,47 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  // 1. Título Otimizado
-  title: "Consulta CPNU - Classificação no Cadastro de Reserva",
+// 1. Título Otimizado
+  title: "Patri Tech | Gestão Patrimonial e Rastreio Inteligente",
 
   // 2. Descrição Otimizada
-  description: "Consulte de forma rápida e clara sua classificação detalhada no Cadastro de Reserva do CPNU. Ferramenta não oficial para verificar sua posição por cargo, bloco e cotas.",
+  description: "Sistema avançado de gestão de ativos e controle patrimonial. Monitoramento via QR Code, rastreio inteligente e mecanismos rigorosos de controle de acesso para sua empresa.",
 
   // 3. Palavras-chave (Keywords)
-  keywords: "CPNU, Concurso Nacional Unificado, Consulta CPNU, Classificação CPNU, Resultado CPNU, Cadastro de Reserva, Concurso Público, consultar classificação cpnu, ver minha posição concurso unificado, lista de espera cpnu dashboard",
+  keywords: "gestão patrimonial, controle de ativos, rastreio de ativos, QR Code patrimonial, inventário inteligente, Patri Tech, segurança de ativos, logística corporativa",
 
   // 4. Autor
-  authors: [{ name: 'Matheus Costa', url: 'https://portfolio-brown-gamma-63.vercel.app/' }],
+  authors: [
+    { name: 'Matheus Costa', url: 'https://portfolio-brown-gamma-63.vercel.app/' },
+    { name: 'Jackie', url: 'url do seu portifolio ou rede social' },
+    { name: 'Cris', url: 'url do seu portifolio ou rede social' },
+    { name: 'Evelyn', url: 'url do seu portifolio ou rede social' }
+  ],
 
-  // 5. Open Graph (para compartilhamento em redes sociais)
+  // 5. Open Graph (Redes Sociais e Slack/Teams)
   openGraph: {
-    title: "Consulta CPNU - Classificação no Cadastro de Reserva",
-    description: "Ferramenta para verificar sua posição por cargo, bloco e obter insights com dashboard dinâmico.",
-    url: 'https://www.consultacpnu.com.br/',
-    siteName: 'Consulta CPNU',
+    title: "Patri Tech - Inteligência em Gestão de Ativos",
+    description: "Solução completa para controle de inventário e rastreio de bens com QR Code e tecnologia inteligente.",
+    url: 'https://patritech.vercel.app/', // Substitua pela URL real se tiver
+    siteName: 'Patri Tech',
     images: [
       {
-        url: 'https://www.consultacpnu.com.br/preview_consultaCPNU.png',
+        url: 'https://patritech.vercel.app/og-image.png', // Recomendado atualizar a imagem para uma do sistema
         width: 1200,
         height: 630,
+        alt: 'Dashboard Patri Tech',
       },
     ],
     locale: 'pt_BR',
     type: 'website',
   },
+
+  // 6. Twitter Card
   twitter: {
     card: 'summary_large_image',
-    title: 'Consulta CPNU | Cadastro de Reserva e Dashboards',
-    description: 'Consulte sua situação no CR do CPNU e explore os novos dashboards interativos.',
-    images: ['https://www.consultacpnu.com.br/preview_consultaCPNU.png'],
+    title: 'Patri Tech | Gestão de Ativos Inteligente',
+    description: 'Simplifique o controle de patrimônio da sua empresa com rastreio via QR Code e relatórios detalhados.',
+    images: ['https://patritech.vercel.app/og-image.png'],
   },
 };
 
