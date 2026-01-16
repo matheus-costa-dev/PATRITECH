@@ -49,6 +49,7 @@ export default function QrScanner({ onClose }: QrScannerProps) {
             }
           },
           (errorMessage) => {
+            console.error(errorMessage)
             // Callback obrigatório no TypeScript
             // Erros de leitura são normais
             // console.debug(errorMessage);
@@ -78,7 +79,7 @@ export default function QrScanner({ onClose }: QrScannerProps) {
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-white p-4 rounded-xl shadow-xl">
-        <div id="qr-reader" className="w-[300px]" />
+        <div id="qr-reader" className="w-75" />
 
         <button
           onClick={onClose}

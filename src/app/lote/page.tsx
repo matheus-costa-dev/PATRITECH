@@ -5,12 +5,29 @@ import { supabase } from "@/lib/supabase";
 import Link from "next/link";
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
-import { FaBox, FaChevronRight, FaTruck, FaListUl, FaPlus } from "react-icons/fa";
+import { FaBox, FaChevronRight, FaTruck, FaListUl } from "react-icons/fa"; // Removido FaPlus não utilizado
 import AddAtivoModal2 from "@/components/UI/AddAtivoModal2";
+import { useAuth } from "@/context/AuthContext";
+import ForbiddenAccess from "@/components/shared/ForbiddenAccess";
+
+// 1. Definindo interfaces para remover o erro de "any"
+interface AtivoSimplificado {
+  nome_ativo: string;
+}
+
+interface Lote {
+  id_lote: string;
+  fornecedor_lote: string | null;
+  quantidade_ativos: number;
+  data_compra: string;
+  ativo: AtivoSimplificado[];
+}
 
 function LotesPage() {
-  const [lotes, setLotes] = useState<any[]>([]);
+  // Aplicando os tipos no estado
+  const [lotes, setLotes] = useState<Lote[]>([]);
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated } = useAuth(); 
 
   async function carregarLotes() {
     try {
@@ -26,8 +43,8 @@ function LotesPage() {
         .order("data_compra", { ascending: false });
 
       if (error) throw error;
-      setLotes(data || []);
-    } catch (err: any) {
+      setLotes((data as unknown as Lote[]) || []);
+    } catch (err) {
       console.error(err);
       toast.error("Erro ao carregar lotes");
     } finally {
@@ -39,12 +56,20 @@ function LotesPage() {
     carregarLotes();
   }, []);
 
+  // Removido o bloco de código do Navbar que estava aqui (gerava os erros de pathName e setIsMenuOpen)
+
   if (loading) return <Loading />;
+
+  // Se não estiver autenticado, você pode retornar um aviso ou redirecionar
+  if (!isAuthenticated) {
+    return (
+      <ForbiddenAccess />
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#f3f4f6] pb-20 font-sans text-[#333]">
       
-      {/* TÍTULO E HEADER RESPONSIVO */}
       <div className="w-full bg-white border-b border-gray-200 mb-12 shadow-sm">
         <div className="container mx-auto px-4 max-w-5xl py-12 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-left">
@@ -53,7 +78,6 @@ function LotesPage() {
             <div className="w-16 h-1 bg-[#8b1d22] mt-3 mx-auto md:mx-0"></div>
           </div>
           <div className="shrink-0">
-             {/* O Modal permanece com sua lógica original */}
             <AddAtivoModal2 onSuccess={carregarLotes} />
           </div>
         </div>
@@ -65,9 +89,9 @@ function LotesPage() {
             <Link 
               key={lote.id_lote} 
               href={`/lote/${lote.id_lote}`}
-              className="group block bg-white p-8 rounded-[2.5rem] border border-gray-200 hover:border-[#00BFFF] transition-all shadow-lg hover:shadow-2xl flex flex-col min-h-[320px] relative overflow-hidden"
+              // Ajustado CSS para remover conflito 'block' e 'flex' e classes canônicas Tailwind
+              className="group flex flex-col bg-white p-8 rounded-[2.5rem] border border-gray-200 hover:border-[#00BFFF] transition-all shadow-lg hover:shadow-2xl min-h-80 relative overflow-hidden"
             >
-              {/* Ícone e ID */}
               <div className="flex justify-between items-start mb-6">
                 <div className="bg-blue-50 p-4 rounded-2xl text-[#00BFFF] group-hover:bg-[#00BFFF] group-hover:text-white transition-all shadow-sm">
                   <FaBox size={24} />
@@ -77,7 +101,6 @@ function LotesPage() {
                 </span>
               </div>
 
-              {/* Informações do Lote */}
               <div className="flex items-center gap-2 text-[#00BFFF] mb-2">
                 <FaTruck size={12} />
                 <span className="text-[10px] font-black uppercase tracking-widest">Fornecedor</span>
@@ -86,15 +109,14 @@ function LotesPage() {
                 {lote.fornecedor_lote || "Não informado"}
               </h2>
 
-              {/* LISTA DE ATIVOS NO LOTE (Mantendo a lógica slice 0, 3) */}
-              <div className="mt-6 flex-grow">
+              <div className="mt-6 grow">
                 <div className="flex items-center gap-2 mb-3 text-gray-400">
                   <FaListUl size={10} />
                   <span className="text-[10px] font-black uppercase tracking-widest">Itens principais:</span>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   {lote.ativo && lote.ativo.length > 0 ? (
-                    lote.ativo.slice(0, 3).map((at: any, index: number) => (
+                    lote.ativo.slice(0, 3).map((at, index) => (
                       <span key={index} className="text-[9px] bg-gray-50 px-3 py-1.5 rounded-full text-gray-500 border border-gray-100 font-bold uppercase">
                         {at.nome_ativo}
                       </span>
@@ -110,7 +132,6 @@ function LotesPage() {
                 </div>
               </div>
 
-              {/* RODAPÉ DO CARD */}
               <div className="flex justify-between items-end mt-8 pt-6 border-t border-gray-50">
                 <div className="flex gap-6">
                   <div className="flex flex-col">

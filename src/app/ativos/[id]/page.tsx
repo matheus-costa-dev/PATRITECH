@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabase";
 import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from "react-toastify";
 import Loading from "@/components/UI/Loading";
+import { useAuth } from "@/context/AuthContext";
+import ForbiddenAccess from "@/components/shared/ForbiddenAccess";
 
 export default function AtivoPage() {
   const params = useParams();
@@ -16,7 +18,7 @@ export default function AtivoPage() {
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-
+  const { isAuthenticated } = useAuth();
   // Estados de expansão
   const [mostrarMaisInfo, setMostrarMaisInfo] = useState(false);
   const [verTodasAvarias, setVerTodasAvarias] = useState(false);
@@ -74,6 +76,8 @@ export default function AtivoPage() {
         .eq("id_ativo", params.id)
         .single();
 
+      if (error) throw error
+
       if (data) {
         const movs = data.movimentacao?.sort((a: any, b: any) => new Date(b.data_movimentacao).getTime() - new Date(a.data_movimentacao).getTime());
         const avarias = data.ativo_defeituoso?.sort((a: any, b: any) => new Date(b.data_registro_defeito).getTime() - new Date(a.data_registro_defeito).getTime());
@@ -86,7 +90,9 @@ export default function AtivoPage() {
           id_condicao: data.id_condicao || 0,
         });
       }
-    } catch (err) { toast.error("Erro ao carregar"); }
+    } catch (err) { 
+      console.error(err)
+      toast.error("Erro ao carregar"); }
     finally { setLoading(false); }
   }
 
@@ -158,7 +164,9 @@ export default function AtivoPage() {
       setInputNovoDefeito("");
       carregarDados();
 
-    } catch (e) { toast.error("Erro ao salvar."); }
+    } catch (e) { 
+      console.error(e);
+      toast.error("Erro ao salvar."); }
     finally { setIsSaving(false); }
   }
 
@@ -181,6 +189,12 @@ export default function AtivoPage() {
 
   if (loading) return <Loading />;
 
+  if (!isAuthenticated) {
+    return (
+      <ForbiddenAccess />
+    );
+  }
+  
   return (
     <div className="min-h-screen w-full bg-[#f3f4f6] pb-20 font-sans text-[#333]">
       
@@ -189,7 +203,7 @@ export default function AtivoPage() {
         <h1 className="text-3xl md:text-4xl font-bold text-[#333] tracking-tight uppercase text-center px-4">
           Gerenciar
         </h1>
-        <div className="w-16 h-[3px] bg-[#8b1d22] mt-2"></div>
+        <div className="w-16 h-0.75 bg-[#8b1d22] mt-2"></div>
       </div>
 
       <div className="container mx-auto px-4 max-w-4xl">
@@ -222,7 +236,7 @@ export default function AtivoPage() {
             </div>
 
             {/* AÇÕES LADO DIREITO */}
-            <div className="flex flex-col gap-3 w-full md:w-auto min-w-[240px]">
+            <div className="flex flex-col gap-3 w-full md:w-auto min-w-60">
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsEditing(!isEditing)}
@@ -299,7 +313,7 @@ export default function AtivoPage() {
             </div>
 
             {/* ETIQUETA QR */}
-            <div className="flex flex-col items-center bg-gray-50 rounded-[2rem] p-8 border border-dashed border-gray-300">
+            <div className="flex flex-col items-center bg-gray-50 rounded-4xl p-8 border border-dashed border-gray-300">
               <div ref={canvasRef} className="bg-white p-4 rounded-xl shadow-inner mb-6">
                 <QRCodeCanvas
                   value={typeof window !== "undefined" ? window.location.href : ""}
@@ -405,7 +419,7 @@ export default function AtivoPage() {
 
       {/* MODAL DEFEITO */}
       {showDefeitoModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-[100]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-100">
           <div className="bg-white p-10 rounded-[2.5rem] max-w-lg w-full shadow-2xl border border-red-50">
             <h3 className="text-2xl font-black mb-2 text-[#8b1d22] uppercase tracking-tighter">Relatar Avaria</h3>
             <p className="text-gray-400 text-[10px] mb-8 font-bold uppercase tracking-widest">Registre os detalhes do problema identificado:</p>
@@ -417,7 +431,7 @@ export default function AtivoPage() {
             />
             <div className="flex gap-3 mt-8">
               <button onClick={() => setShowDefeitoModal(false)} className="flex-1 py-4 bg-gray-100 rounded-full font-black uppercase text-[10px] text-gray-500 hover:bg-gray-200">Voltar</button>
-              <button onClick={() => executarUpdateAtivo(inputNovoDefeito)} className="flex-[2] py-4 bg-[#8b1d22] rounded-full font-black uppercase text-[10px] text-white hover:bg-black shadow-lg transition-all">Gravar Ocorrência</button>
+              <button onClick={() => executarUpdateAtivo(inputNovoDefeito)} className="flex-2 py-4 bg-[#8b1d22] rounded-full font-black uppercase text-[10px] text-white hover:bg-black shadow-lg transition-all">Gravar Ocorrência</button>
             </div>
           </div>
         </div>
@@ -425,7 +439,7 @@ export default function AtivoPage() {
 
       {/* MODAL SOLUÇÃO */}
       {showSolucaoModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-[100]">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-6 z-100">
           <div className="bg-white p-10 rounded-[2.5rem] max-w-lg w-full shadow-2xl border border-green-50">
             <h3 className="text-2xl font-black mb-2 text-green-600 uppercase tracking-tighter">Finalizar Reparo</h3>
             <div className="mt-4 mb-6">

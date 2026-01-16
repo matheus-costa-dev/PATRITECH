@@ -3,16 +3,11 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaTimes, FaSignOutAlt } from 'react-icons/fa';
 import { usePathname } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext'; 
 
-interface linksType {
-  title: string,
-  href: string,
-}
-
-const links: linksType[] = [
-  { title: "Login", href: "/" },
+const links = [
   { title: "Ativos", href: "/ativos" },
   { title: "Lotes", href: "/lote" }
 ]
@@ -20,12 +15,31 @@ const links: linksType[] = [
 function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathName = usePathname();
+  const { isAuthenticated, logout, loading } = useAuth(); 
+
+  // Se estiver carregando o status da sessão, podemos retornar um estado neutro
+  // para evitar que os botões "saltem" na tela
+  if (loading) return <nav className="bg-[#00BFFF] h-32 shadow-xl sticky top-0 z-50" />;
 
   const NavLinks = () => (
     <>
-      {links.map((item) => {
+      {/* Se NÃO está logado e NÃO está na home, mostra link para voltar ao Login.
+         Se já está na home (/), não precisa mostrar o link "Login".
+      */}
+      {!isAuthenticated && pathName !== '/' && (
+        <Link
+          href="/"
+          onClick={() => setIsMenuOpen(false)}
+          className="group relative text-white px-4 py-2 text-base font-bold uppercase tracking-widest transition-colors duration-300"
+        >
+          Login
+          <span className="absolute left-0 bottom-0 h-1 bg-[#8b1d22] w-0 group-hover:w-full transition-all duration-300"></span>
+        </Link>
+      )}
+
+      {/* Links Protegidos: Só aparecem se o usuário estiver logado */}
+      {isAuthenticated && links.map((item) => {
         const isActive = pathName === item.href;
-        
         return (
           <Link
             key={item.title}
@@ -35,12 +49,26 @@ function Navbar() {
           >
             {item.title}
             <span className={`
-              absolute left-0 bottom-0 h-[4px] bg-[#8b1d22] transition-all duration-300
+              absolute left-0 bottom-0 h-1 bg-[#8b1d22] transition-all duration-300
               ${isActive ? 'w-full' : 'w-0 group-hover:w-full'}
             `}></span>
           </Link>
         )
       })}
+
+      {/* Botão de Sair: Só aparece se estiver logado */}
+      {isAuthenticated && (
+        <button
+          onClick={() => {
+            logout();
+            setIsMenuOpen(false);
+          }}
+          className="flex items-center gap-2 bg-[#8b1d22] hover:bg-red-700 text-white px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all active:scale-95 md:ml-4 shadow-lg"
+        >
+          <FaSignOutAlt />
+          Sair
+        </button>
+      )}
     </>
   );
 
@@ -50,9 +78,9 @@ function Navbar() {
         <div className="flex items-center justify-between h-32">
           
           <div className="shrink-0">
-            <Link href="/" className="flex items-center gap-5 group transition-transform active:scale-95">
-              
-              <div className="relative w-28 h-28 sm:w-40 sm:h-40 flex-shrink-0">
+            {/* O Logo agora sempre leva para a home (Login se deslogado, ou Dashboard se logado pelo middleware) */}
+            <Link href={isAuthenticated? "/ativos" : "/"}  className="flex items-center gap-5 group transition-transform active:scale-95">
+              <div className="relative w-28 h-28 sm:w-40 sm:h-40 shrink-0">
                 <Image
                   src="/logo.png"
                   alt="Logo PatriTech"
@@ -73,10 +101,12 @@ function Navbar() {
             </Link>
           </div>
 
-          <div className="hidden md:flex md:items-center md:gap-10 h-full">
+          {/* Desktop Nav */}
+          <div className="hidden md:flex md:items-center md:gap-4 h-full">
             <NavLinks />
           </div>
 
+          {/* Mobile Button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -88,7 +118,8 @@ function Navbar() {
         </div>
       </div>
 
-      <div className={`${isMenuOpen ? 'block animate-in slide-in-from-top duration-300' : 'hidden'} md:hidden bg-[#0096C7] border-t border-white/10`}>
+      {/* Mobile Menu Overlay */}
+      <div className={`${isMenuOpen ? 'block animate-in slide-in-from-top duration-300' : 'hidden'} md:hidden bg-[#0096C7] border-t border-white/10 shadow-2xl`}>
         <div className="flex flex-col items-center gap-8 py-12">
           <NavLinks />
         </div>

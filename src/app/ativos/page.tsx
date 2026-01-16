@@ -8,12 +8,15 @@ import AddAtivoModal from "@/components/UI/AddAtivoModal";
 import AddAtivoModal2 from "@/components/UI/AddAtivoModal2";
 import { supabase } from "@/lib/supabase";
 import QrScanner from "@/components/UI/QrScanner";
+import { useAuth } from "@/context/AuthContext";
+import ForbiddenAccess from "@/components/shared/ForbiddenAccess";
 
 export default function AtivosPage() {
   const [ativos, setAtivos] = useState<Ativo[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState<boolean>(true);
   const [open, setOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   async function refreshData() {
     try {
@@ -47,6 +50,13 @@ export default function AtivosPage() {
 
   if (loading) return <Loading />;
 
+  if (!isAuthenticated) {
+    return (
+      <ForbiddenAccess />
+    );
+  }
+
+
   return (
     <div className="min-h-screen w-full py-12 md:py-20 bg-[#f3f4f6]">
       <div className="container mx-auto px-4 max-w-5xl">
@@ -56,7 +66,7 @@ export default function AtivosPage() {
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[#333] tracking-wider uppercase">
             Painel de Ativos
           </h1>
-          <div className="w-16 md:w-24 lg:w-32 h-[3px] bg-[#8b1d22] mt-3"></div>
+          <div className="w-16 md:w-24 lg:w-32 h-0.75 bg-[#8b1d22] mt-3"></div>
         </div>
 
         {/* Barra de Ações - Flexível para mobile */}
@@ -77,7 +87,7 @@ export default function AtivosPage() {
           {/* Grupo de Botões - Quebra em colunas no mobile */}
           <div className="flex flex-col sm:flex-row shrink-0 gap-3 w-full lg:w-auto items-center">
             <button
-              onClick={() => setOpen(true)} 
+              onClick={() => setOpen(true)}
               className="w-full sm:w-auto bg-[#00BFFF] hover:bg-[#0096C7] text-white px-6 md:px-8 py-3 rounded-full font-bold transition-all shadow-lg flex items-center justify-center gap-2 whitespace-nowrap active:scale-95"
             >
               <span>📷</span> Ler QR Code
@@ -85,8 +95,8 @@ export default function AtivosPage() {
 
             {/* Mantendo seus componentes de modal exatamente como estavam */}
             <div className="flex gap-2 w-full sm:w-auto">
-                <AddAtivoModal onSuccess={refreshData} />
-                <AddAtivoModal2 onSuccess={refreshData} />
+              <AddAtivoModal onSuccess={refreshData} />
+              <AddAtivoModal2 onSuccess={refreshData} />
             </div>
           </div>
         </div>
@@ -101,7 +111,7 @@ export default function AtivosPage() {
               <Link
                 key={ativo.id_ativo}
                 href={`/ativos/${ativo.id_ativo}`}
-                className="group block p-5 md:p-6 rounded-[2rem] bg-white border border-gray-200
+                className="group block p-5 md:p-6 rounded-4xl bg-white border border-gray-200
                            shadow-md transition-all duration-300 
                            hover:-translate-y-1 hover:shadow-xl
                            hover:bg-[#00BFFF] hover:border-[#00BFFF]"
@@ -140,7 +150,7 @@ export default function AtivosPage() {
               </Link>
             ))
           ) : (
-            <div className="text-center col-span-full py-16 bg-white rounded-[2rem] border border-dashed border-gray-300">
+            <div className="text-center col-span-full py-16 bg-white rounded-4xl border border-dashed border-gray-300">
               <p className="text-gray-400 font-bold uppercase text-xs tracking-widest">Nenhum ativo encontrado.</p>
             </div>
           )}
